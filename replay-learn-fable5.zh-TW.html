@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>實錄重演 · /learn 校準 30 秒</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--bg:#0F141B;--panel:#161E29;--panel2:#1B2432;--line:#2A3542;--line2:#39485A;
+    --text:#E9EDF1;--muted:#93A1B0;--dim:#5F6E7E;--accent:#E3A93C;--accent-dim:#9C7526;
+    --red:#E25B4A;--green:#58B98A;
+    --mono:ui-monospace,Menlo,Consolas,monospace;
+    --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;padding:3rem 1rem 4rem;}
+  .head{max-width:860px;width:100%;margin-bottom:1.2rem;}
+  .back{font-family:var(--mono);font-size:.78rem;margin-bottom:1rem;}
+  .back a{color:var(--accent);text-decoration:none;}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;color:var(--accent);letter-spacing:.25em;margin-bottom:.5rem;}
+  h1{font-size:clamp(1.3rem,3.5vw,1.9rem);font-weight:900;}
+  .honest{margin-top:.6rem;font-size:.8rem;color:var(--dim);border-left:3px solid var(--accent-dim);padding-left:.8rem;line-height:1.6;}
+  .term{max-width:860px;width:100%;background:#0A0E14;border:1px solid var(--line2);border-radius:10px;overflow:hidden;}
+  .tbar{display:flex;align-items:center;gap:.5rem;background:var(--panel2);border-bottom:1px solid var(--line2);padding:.55rem 1rem;}
+  .dot{width:.7rem;height:.7rem;border-radius:50%;background:var(--line2);}
+  .dot.r{background:#5a3833;} .dot.y{background:var(--accent-dim);} .dot.g{background:#2e4f41;}
+  .ttitle{font-family:var(--mono);font-size:.7rem;color:var(--dim);margin-left:.6rem;}
+  .screen{padding:1.1rem 1.3rem;min-height:22rem;max-height:60vh;overflow-y:auto;
+    font-family:var(--mono);font-size:.82rem;line-height:1.75;}
+  .ln{white-space:pre-wrap;word-break:break-all;}
+  .ln.cmd{color:var(--text);}
+  .ln.cmd::before{content:"❯ ";color:var(--green);}
+  .ln.you::before{content:"你 ▸ ";color:var(--accent);}
+  .ln.out{color:var(--muted);}
+  .ln.ok{color:var(--green);}
+  .ln.warn{color:var(--red);}
+  .ln.note{color:var(--bg);background:var(--accent);border-radius:6px;padding:.3rem .8rem;
+    margin:.7rem 0;font-family:var(--sans);font-weight:700;font-size:.82rem;display:inline-block;}
+  .cursor{display:inline-block;width:.55em;height:1.05em;background:var(--accent);vertical-align:text-bottom;
+    animation:blink 1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  .ctrl{max-width:860px;width:100%;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;
+    margin-top:.9rem;font-family:var(--mono);font-size:.78rem;}
+  .ctrl button{background:var(--panel);border:1px solid var(--line2);color:var(--text);
+    border-radius:6px;padding:.4rem .9rem;cursor:pointer;font-family:var(--mono);font-size:.78rem;}
+  .ctrl button:hover{border-color:var(--accent);color:var(--accent);}
+  .ctrl button.on{border-color:var(--accent);color:var(--accent);}
+  .ctrl .sp{color:var(--dim);margin-left:auto;}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none;}}
+</style>
+</head>
+<body>
+<div class="head">
+  <p class="back"><a href="./" target="_top">⌂ 課程目錄</a></p>
+  <div class="eyebrow">第 4 堂 · 實錄一開場（fork 後第一週）</div>
+  <h1>/learn 校準迴圈 —— 30 秒</h1>
+  <p class="honest">依真實糾正紀錄重演（distill 頻率掃描抓到的實例：「不要開 PR，直接 merge」）。這就是校準迴圈的一次完整循環：講一次 → 記下來 → 從此不用再講。</p>
+</div>
+<div class="term">
+  <div class="tbar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="ttitle">cookys@dev — /learn replay</span></div>
+  <div class="screen" id="screen"></div>
+</div>
+<div class="ctrl">
+  <button id="play">⏸ 暫停</button>
+  <button data-sp="1" class="spd on">1×</button><button data-sp="2" class="spd">2×</button><button data-sp="4" class="spd">4×</button>
+  <button id="restart">↻ 重播</button>
+  <span style="color:var(--dim)">章節：</span>
+  <button data-ch="0" class="ch">① 又講一次</button><button data-ch="1" class="ch">② /learn</button><button data-ch="2" class="ch">③ 從此記得</button>
+  <span class="sp" id="prog"></span>
+</div>
+<script>
+const SCRIPT=[
+ {ch:0,t:'note',x:'① 同一句糾正，你已經講了不只一次'},
+ {ch:0,t:'out',x:'—— 三天前的 session ——'},
+ {ch:0,t:'out',x:'agent ▸ 改動已完成，我開一個 PR 供你審核？'},
+ {ch:0,t:'you',x:'不要開 PR，直接 merge 進 develop 然後 push。'},
+ {ch:0,t:'out',x:'—— 今天的 session ——'},
+ {ch:0,t:'out',x:'agent ▸ 已完成，接下來我建立 PR…'},
+ {ch:0,t:'you',x:'又來 —— 不要開 PR！直接 merge。'},
+ {ch:0,t:'note',x:'講第二次的那個瞬間，就是該 /learn 的訊號（Day 4 習慣）'},
+ {ch:1,t:'note',x:'② 記進系統 —— 一分鐘'},
+ {ch:1,t:'cmd',x:'/learn 這個 repo 不開 PR —— 完成後直接 git merge --no-ff 進 develop 再 push'},
+ {ch:1,t:'ok', x:'✓ 已寫入 memory/feedback_no_pr_direct_merge.md（含 Why 與 How to apply）'},
+ {ch:1,t:'ok', x:'✓ MEMORY.md 索引已更新 —— 之後每個 session 開場自動載入'},
+ {ch:2,t:'note',x:'③ 新 session —— 不用再講'},
+ {ch:2,t:'out',x:'—— 隔週，全新 session ——'},
+ {ch:2,t:'out',x:'agent ▸ 任務完成。依此 repo 慣例：直接 merge --no-ff 進 develop 並 push（不開 PR）。'},
+ {ch:2,t:'ok', x:'merged → develop ✓'},
+ {ch:2,t:'note',x:'校準迴圈，一次一條 —— fork 後的第一週，我每天都在做這件事'},
+];
+const S=document.getElementById('screen');let i=0,playing=true,speed=1,timer=null;
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function addLine(item,cb){
+  const d=document.createElement('div');d.className='ln '+item.t;S.appendChild(d);
+  if(item.t==='cmd'||item.t==='you'){
+    let k=0;const txt=item.x;const cur=document.createElement('span');cur.className='cursor';d.appendChild(cur);
+    (function type(){
+      if(!playing){timer=setTimeout(type,120);return;}
+      if(k<txt.length){d.insertBefore(document.createTextNode(txt[k++]),cur);S.scrollTop=S.scrollHeight;timer=setTimeout(type,18/speed);}
+      else{cur.remove();cb();}
+    })();
+  }else{
+    d.innerHTML=esc(item.x).replace(/\n/g,'<br>');S.scrollTop=S.scrollHeight;
+    timer=setTimeout(cb,(item.t==='note'?1400:650)/speed);
+  }
+}
+function step(){
+  if(i>=SCRIPT.length){document.getElementById('prog').textContent='完 · ↻ 可重播';return;}
+  document.getElementById('prog').textContent=(i+1)+' / '+SCRIPT.length;
+  addLine(SCRIPT[i++],()=>{ if(playing)step(); else{const w=()=>playing?step():setTimeout(w,150);w();} });
+}
+function jump(ch){clearTimeout(timer);S.innerHTML='';i=SCRIPT.findIndex(l=>l.ch===ch);if(i<0)i=0;playing=true;
+  document.getElementById('play').textContent='⏸ 暫停';step();}
+document.getElementById('play').addEventListener('click',function(){playing=!playing;this.textContent=playing?'⏸ 暫停':'▶ 播放';});
+document.getElementById('restart').addEventListener('click',()=>jump(0));
+document.querySelectorAll('.spd').forEach(b=>b.addEventListener('click',function(){speed=+this.dataset.sp;
+  document.querySelectorAll('.spd').forEach(x=>x.classList.remove('on'));this.classList.add('on');}));
+document.querySelectorAll('.ch').forEach(b=>b.addEventListener('click',function(){jump(+this.dataset.ch);}));
+step();
+</script>
+</body>
+</html>

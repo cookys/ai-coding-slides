@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>*{margin:0;padding:0;box-sizing:border-box;}</style>
+</head>
+<body>
+<title>第 2 堂 · Best Practice — 讓 AI 同事可靠工作的通用實務</title>
+<style>
+  :root{
+    --bg:#0F141B; --panel:#161E29; --panel2:#1B2432; --line:#2A3542; --line2:#39485A;
+    --text:#E9EDF1; --muted:#93A1B0; --dim:#5F6E7E;
+    --accent:#E3A93C; --accent-dim:#9C7526;
+    --red:#E25B4A; --green:#58B98A;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Courier New",monospace;
+    --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
+    --serif:"Noto Serif TC","Songti TC",PMingLiU,Georgia,serif;
+  }
+  html,body{height:100%;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;}
+  .progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0%;z-index:50;transition:width .25s ease;}
+  .bottombar{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;gap:1.5rem;
+    padding:.55rem 1.4rem;font-family:var(--mono);font-size:.72rem;color:var(--dim);
+    border-top:1px solid var(--line);background:rgba(15,20,27,.92);z-index:40;}
+  .bottombar .act{color:var(--accent-dim);letter-spacing:.12em;white-space:nowrap;}
+  .bottombar .foot{flex:1;text-align:center;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .bottombar .count{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap;}
+  .navbtn{background:none;border:1px solid var(--line);color:var(--muted);font-family:var(--mono);
+    font-size:.8rem;padding:.15rem .6rem;border-radius:4px;cursor:pointer;}
+  .navbtn:hover{border-color:var(--accent);color:var(--accent);}
+  .navbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .notebar{position:fixed;left:0;right:0;bottom:2.2rem;z-index:39;display:none;
+    padding:.8rem 1.6rem;background:#0B0F15;border-top:1px dashed var(--line2);
+    color:var(--muted);font-size:.85rem;line-height:1.55;}
+  .notebar b{color:var(--accent);font-family:var(--mono);font-weight:600;margin-right:.6em;}
+  body.shownotes .notebar{display:block;}
+  .indexov{position:fixed;inset:0;background:rgba(9,12,17,.96);z-index:60;display:none;
+    padding:4rem 6vw 3rem;overflow-y:auto;}
+  .indexov.on{display:block;}
+  .indexov h2{font-family:var(--mono);font-size:.8rem;color:var(--accent);letter-spacing:.2em;margin-bottom:1.2rem;}
+  .indexov .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.5rem;}
+  .indexov button{display:flex;gap:.7em;align-items:baseline;text-align:left;background:var(--panel);
+    border:1px solid var(--line);color:var(--text);padding:.55rem .8rem;border-radius:4px;cursor:pointer;font-size:.82rem;}
+  .indexov button:hover{border-color:var(--accent);}
+  .indexov button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .indexov button .n{font-family:var(--mono);color:var(--accent-dim);font-variant-numeric:tabular-nums;}
+  .indexov button.cur{border-color:var(--accent);background:var(--panel2);}
+  .slide{position:fixed;inset:0 0 2.4rem 0;display:flex;flex-direction:column;justify-content:center;
+    padding:4.5vmin 8vmin 5vmin;opacity:0;visibility:hidden;transform:translateY(10px);
+    transition:opacity .3s ease,transform .3s ease,visibility .3s;}
+  .slide.on{opacity:1;visibility:visible;transform:none;}
+  .slide{align-items:center;}
+  .slide>*{width:100%;max-width:66rem;}
+  .slide>.skipchip{width:auto;}
+  .eyebrow{font-family:var(--mono);font-size:clamp(.68rem,1.5vmin,.85rem);color:var(--accent);
+    letter-spacing:.22em;margin-bottom:1.6vmin;}
+  .slide h1{font-weight:900;font-size:clamp(1.7rem,5.6vmin,3.6rem);line-height:1.22;
+    letter-spacing:.01em;text-wrap:balance;margin-bottom:2.2vmin;max-width:26em;}
+  .sub{color:var(--muted);font-size:clamp(.95rem,2.3vmin,1.25rem);line-height:1.65;max-width:34em;}
+  .sub strong{color:var(--text);font-weight:700;}
+  .body{margin-top:3.2vmin;}
+  .take{margin-top:3.5vmin;padding-top:0;font-size:clamp(1rem,2.5vmin,1.35rem);color:var(--text);}
+  .take::before{content:"▸ ";color:var(--accent);}
+  .take em{font-style:normal;color:var(--accent);}
+  .skipchip{position:absolute;top:4.5vmin;right:8vmin;font-family:var(--mono);font-size:.68rem;
+    color:var(--accent-dim);border:1px solid var(--accent-dim);border-radius:99px;padding:.2em .8em;letter-spacing:.1em;}
+  .slide .note{display:none;}
+  .formcard{border:1px solid var(--line2);background:var(--panel);border-radius:6px;overflow:hidden;max-width:56em;}
+  .formhead{display:flex;justify-content:space-between;align-items:center;padding:.5rem .9rem;
+    background:var(--panel2);border-bottom:1px solid var(--line2);
+    font-family:var(--mono);font-size:.72rem;color:var(--muted);letter-spacing:.15em;}
+  .frow{display:grid;grid-template-columns:minmax(5.5em,8em) 1fr;border-top:1px solid var(--line);}
+  .frow:first-of-type{border-top:none;}
+  .flabel{font-family:var(--mono);font-size:.78rem;color:var(--accent-dim);padding:.75rem .9rem;
+    border-right:1px dashed var(--line);letter-spacing:.08em;align-self:stretch;}
+  .fval{padding:.7rem 1rem;font-size:clamp(.9rem,2vmin,1.08rem);line-height:1.55;}
+  .fval.missing{color:var(--dim);font-style:italic;}
+  .fval .hl{color:var(--accent);}
+  .stamp{display:inline-block;font-family:var(--mono);font-weight:700;font-size:clamp(.85rem,2.2vmin,1.2rem);
+    border:3px solid var(--red);color:var(--red);border-radius:6px;padding:.18em .7em;
+    transform:rotate(-7deg);letter-spacing:.22em;opacity:.92;}
+  .stamp.ok{border-color:var(--green);color:var(--green);}
+  table{border-collapse:collapse;width:100%;max-width:58em;font-size:clamp(.85rem,2vmin,1.05rem);}
+  th{font-family:var(--mono);font-weight:600;font-size:.78em;color:var(--accent-dim);text-align:left;
+    letter-spacing:.1em;padding:.45em .9em;border-bottom:1px solid var(--line2);}
+  td{padding:.62em .9em;border-bottom:1px solid var(--line);line-height:1.5;vertical-align:top;}
+  td:first-child{color:var(--muted);white-space:nowrap;}
+  td .y{color:var(--accent);}
+  .cards{display:grid;gap:1.2vmin 1.6vmin;max-width:60em;}
+  .c3{grid-template-columns:repeat(3,1fr);}
+  .c2{grid-template-columns:repeat(2,1fr);}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:1.6vmin 1.8vmin;}
+  .card h3{font-size:clamp(.95rem,2.2vmin,1.2rem);font-weight:700;margin-bottom:.6vmin;line-height:1.4;}
+  .card p{color:var(--muted);font-size:clamp(.8rem,1.9vmin,1rem);line-height:1.6;}
+  .card .tag{font-family:var(--mono);font-size:.7rem;color:var(--accent-dim);letter-spacing:.15em;display:block;margin-bottom:.8vmin;}
+  .card.bad{border-color:#5a3833;}
+  .card.bad h3::before{content:"✕ ";color:var(--red);}
+  .card.good{border-color:#2e4f41;}
+  .card.good h3::before{content:"✓ ";color:var(--green);}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:1vmin;max-width:62em;}
+  .flow .step{background:var(--panel);border:1px solid var(--line2);border-radius:99px;
+    padding:.55em 1.2em;font-size:clamp(.85rem,2vmin,1.05rem);white-space:nowrap;}
+  .flow .step.hot{border-color:var(--accent);color:var(--accent);}
+  .flow .arr{color:var(--dim);font-family:var(--mono);}
+  .quote{font-family:var(--serif);font-size:clamp(1.4rem,4.6vmin,3rem);line-height:1.5;max-width:22em;text-wrap:balance;}
+  .quote .q2{color:var(--muted);display:block;margin-top:1.2em;font-size:.72em;}
+  .mantra{font-family:var(--serif);font-size:clamp(1.3rem,4vmin,2.6rem);line-height:1.6;max-width:24em;color:var(--text);}
+  .mantra .m2{display:block;margin-top:.8em;}
+  .mantra q{color:var(--accent);font-style:normal;quotes:"「" "」";}
+  .kbd{font-family:var(--mono);font-size:.85em;border:1px solid var(--line2);border-radius:4px;padding:.05em .45em;color:var(--muted);}
+  .exbox{border:1px dashed var(--accent-dim);border-radius:8px;padding:2vmin 2.4vmin;max-width:56em;background:rgba(227,169,60,.04);}
+  .exbox .extag{font-family:var(--mono);font-size:.72rem;color:var(--accent);letter-spacing:.2em;margin-bottom:1vmin;}
+  .exbox p{font-size:clamp(.92rem,2.1vmin,1.12rem);line-height:1.7;color:var(--text);}
+  .exbox .solo{margin-top:1.2vmin;padding-top:1.2vmin;border-top:1px dashed var(--line2);color:var(--muted);font-size:clamp(.82rem,1.9vmin,1rem);}
+  .exbox .solo b{color:var(--accent-dim);font-family:var(--mono);font-size:.72rem;letter-spacing:.15em;margin-right:.6em;}
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+</style>
+
+<div class="progress" id="prog"></div>
+
+<!-- 開場 -->
+
+<section class="slide" data-act="第 2 堂 · 開場" data-foot="→ / 空白鍵 翻頁 · N 講者備註 · G 目錄">
+  <div class="eyebrow">AI CODING 演進 · 第 2 堂</div>
+  <h1 style="font-size:clamp(2rem,7vmin,4.2rem);">Best Practice<br><span style="color:var(--accent)">讓 AI 同事可靠工作</span>的通用實務</h1>
+  <p class="sub">這是操作課，也是工作坊：講 10 分鐘、做 15 分鐘。<br>每個 takeaway 都是<strong>一句你對 AI 說的話</strong> —— 不是要學會的技術。</p>
+  <div class="take" style="color:var(--dim);font-size:.85rem;">按 <span class="kbd">→</span> 開始 · <span class="kbd">N</span> 講者備註 · <span class="kbd">G</span> 目錄</div>
+  <aside class="note">開場 30 秒講清楚今天的形式：不是聽講，是練。全程不出現任何特定工具的指令 —— 這堂課離開任何工具都成立。</aside>
+</section>
+
+<section class="slide" data-act="第 2 堂 · 開場" data-foot="認知換檔：3 分鐘暖身，現場口頭改寫一題">
+  <div class="eyebrow">暖身 · 認知換檔</div>
+  <h1>把第 1 堂的一句話，<br>翻成一句要求</h1>
+  <div class="body">
+    <table>
+      <tr><th>第 1 堂你聽到的</th><th>今天它變成你說的</th></tr>
+      <tr><td>AI 失敗多半是協作失敗</td><td>「開工前，<span class="y">先反問我三個問題</span>。」</td></tr>
+      <tr><td>Self-report 不是證據</td><td>「拿出證據 —— <span class="y">我要能重跑</span>。」</td></tr>
+      <tr><td>AI 會忘，交接本比記憶可靠</td><td>「把現在的狀態<span class="y">寫成交接檔</span>。」</td></tr>
+      <tr><td>你是治理者，不是監工</td><td>「這件事做壞了最糟怎樣？<span class="y">你建議放行到哪一級</span>？」</td></tr>
+    </table>
+  </div>
+  <div class="take">概念到要求，只有<em>一句話的距離</em> —— 今天把這四句練到反射。</div>
+  <aside class="note">3 分鐘暖身：出一題「AI 看起來很強卻常做笨事」請現場任何人翻成一句要求。翻得出來 = 第 1 堂有帶走；翻不出來也沒關係，今天就是來練這個。</aside>
+</section>
+
+<section class="slide" data-act="第 2 堂 · 開場" data-foot="第 1 堂帶走的那張表，今天全部展開">
+  <div class="eyebrow">路線圖</div>
+  <h1>五問迴圈 × 今日四單元</h1>
+  <div class="body">
+    <table>
+      <tr><th>五問迴圈（第 1 堂）</th><th>今天在哪個單元展開</th></tr>
+      <tr><td>1 問 AI ＋ 2 跟 AI 討論</td><td>貫穿全場 —— 每個練習都是一場對話，不是一次指令</td></tr>
+      <tr><td>3 叫 AI 反問你</td><td><span class="y">單元 A</span>：工作單 —— 「先反問我三個問題」</td></tr>
+      <tr><td>4 叫 AI 提解法</td><td><span class="y">單元 A + C</span>：展開工作單、寫交接檔都是「要方案」</td></tr>
+      <tr><td>5 叫 AI 證明有效</td><td><span class="y">單元 B</span>：驗收與證據；<span class="y">單元 D</span> 決定驗多嚴</td></tr>
+    </table>
+  </div>
+  <div class="take">四個單元 = 五問迴圈的<em>操作分解</em>。非工程的同事：A、B 兩單元就是你的全部 —— C、D 聽概念即可。</div>
+  <aside class="note">這張是雙向對映：告訴第 1 堂來的人「你那張表還有效」，也標出非工程聽眾的輕軌（A+B 為主）。</aside>
+</section>
+
+<section class="slide" data-act="第 2 堂 · 開場" data-foot="本堂主軸 —— 四個單元用同一個三拍打四遍">
+  <div class="eyebrow">今日敘事 · 三拍</div>
+  <h1>好的方法應該要怎樣？<br>—— <span style="color:var(--accent)">讓 AI 來回答、來達成</span></h1>
+  <p class="sub" style="margin-top:1vmin;"><strong>「三拍」</strong>＝把任何一件要交給 AI 的事，固定打三個拍子（第 1 堂那個節奏，正式命名）：</p>
+  <div class="body flow" style="max-width:60em;margin-top:1.5vmin;">
+    <span class="step">① 我說的<br><small style="color:var(--dim)">一句人話</small></span><span class="arr">→</span>
+    <span class="step">② 好的方法應該要怎樣？<br><small style="color:var(--dim)">人類團隊早就知道答案</small></span><span class="arr">→</span>
+    <span class="step hot">③ 用 AI 回答並達成它<br><small>你只裁決</small></span>
+  </div>
+  <p class="sub" style="margin-top:2.5vmin;">規則不變：每個做法<strong>離開任何工具仍然成立</strong>；你只保留<strong>提出要求、裁決結果</strong>。<br>—— 連「好的方法是什麼」這一題，都不用你背，用問的。</p>
+  <div class="take">今天四個單元＝<em>同一個三拍打四遍</em>。</div>
+  <aside class="note">這張是全堂主軸。每個單元開場張都是這個三拍的實例：我說的 → 好方法（best practice）→ 用 AI 達成（口訣）。魚竿宣言收進第二段。</aside>
+</section>
+
+<!-- 單元 A -->
+
+<section class="slide" data-act="單元 A · 工作單" data-foot="三拍 · 第一遍 —— 工作單">
+  <div class="eyebrow">單元 A · 工作單</div>
+  <div class="body formcard" style="max-width:56em;margin-top:0;">
+    <div class="formhead"><span>三拍 · A</span><span>工作單</span></div>
+    <div class="frow"><div class="flabel">① 我說的</div><div class="fval">「這個壞了，幫我修。」</div></div>
+    <div class="frow"><div class="flabel">② 好的方法<br>應該要怎樣？</div><div class="fval">一張講清楚<strong>目標／邊界／證據／停損</strong>的工作單 —— 人類團隊叫它 ticket，行之有年。</div></div>
+    <div class="frow"><div class="flabel">③ 用 AI 達成</div><div class="fval"><span class="hl">「開工前，先反問我三個問題。」</span><br><span class="hl">「把我這句話展開成目標／邊界／證據／停損 —— 我來裁決。」</span></div></div>
+  </div>
+  <div class="take">好方法不用你會寫 —— <em>你要求、AI 達成、你裁決</em>。</div>
+  <aside class="note">三拍第一遍。停 10 秒讓大家唸第三拍的兩句。單元結構：三拍 → 四欄位細講 → 護法 → 練習。</aside>
+</section>
+
+<section class="slide" data-act="單元 A · 工作單" data-foot="爛例 → 好例，差別只在「可驗證」">
+  <div class="eyebrow">A-1 · 目標</div>
+  <h1>目標寫成 user story，<br>不寫「動作」</h1>
+  <div class="body cards c2" style="max-width:56em;">
+    <div class="card bad"><h3>「優化登入流程」</h3><p>動作式目標 —— 改了什麼都算「優化」，做完你無法驗收，AI 也無從自證。</p></div>
+    <div class="card good"><h3>「身為已登入的使用者，登入後我應停留在原本要去的頁面」</h3><p>誰・要什麼・為什麼 —— 結束狀態<strong>可驗證</strong>（重現步驟 X 不再重現），AI 知道終點。</p></div>
+  </div>
+  <p class="sub" style="margin-top:2vmin;">目標之外的東西 —— 流程、怎麼達到、怎麼驗收 —— <strong>AI 寫、AI 解釋、你確認</strong>。</p>
+  <div class="take">目標是你的，<em>路是它的</em> —— 判斷法：這個目標做完能不能被打勾？</div>
+  <aside class="note">User story 格式（誰/要什麼/為什麼）逼出「結束狀態」視角。知識工作版同構：「把報告改好」→「身為要向客戶簡報的 PM，我要一份分成結論/依據/風險三節、每個結論有出處的報告」。流程與驗收細節讓 AI 起草再確認 —— 呼應下一張的左右護法。</aside>
+</section>
+
+<section class="slide" data-act="單元 A · 工作單" data-foot="negative scope：10 秒說出口，救回一個下午">
+  <div class="eyebrow">A-2 · 邊界</div>
+  <h1>「不要動什麼」<br>比「要做什麼」值錢</h1>
+  <div class="body">
+    <div class="formcard" style="max-width:44em;">
+      <div class="formhead"><span>邊界宣告 NEGATIVE SCOPE</span><span>10 秒</span></div>
+      <div class="frow"><div class="flabel">說出口</div><div class="fval">「先不動 auth schema、不碰 payment、不改測試的斷言。」</div></div>
+      <div class="frow"><div class="flabel">沒說的代價</div><div class="fval missing">AI 順手「重構」了鄰近模組 —— 你花一個下午看一堆與目標無關的 diff。</div></div>
+      <div class="frow"><div class="flabel">想不出來？</div><div class="fval">邊界也用問的：「這個任務，<span class="hl">你覺得哪些東西不該動</span>？」「加上『不碰 X』<span class="hl">會比較好嗎？為什麼</span>？」—— 換不同問法多問一兩次，抽出模型不同角度的意見，你挑著採。</div></div>
+    </div>
+  </div>
+  <div class="take">AI 的能力越強，<em>邊界越值錢</em> —— 而邊界本身，也是問出來的。</div>
+  <aside class="note">問聽眾：有沒有被 AI「順手幫你重構」過？幾乎人人有。最後一列是關鍵姿態：「你覺得這需要嗎？」「這樣會比較好嗎？」這類開放問句，多路觸發模型不同角度的產出機率 —— 同一題換三種問法，得到的不是重複，是三個視角。這也是左右護法的前奏。</aside>
+</section>
+
+<section class="slide" data-act="單元 A · 工作單" data-foot="停損是在冷靜時，寫給失控時的自己">
+  <div class="eyebrow">A-3 · 停損</div>
+  <h1>預先寫好：<br>什麼情況下停下來</h1>
+  <div class="body cards c3" style="max-width:60em;">
+    <div class="card"><h3>原因不明</h3><p>「先列 2–3 個假設回來討論，不要直接改。」</p></div>
+    <div class="card"><h3>改動失控</h3><p>「碰超過 N 個檔案就停下來報告。」</p></div>
+    <div class="card"><h3>想動驗收標準</h3><p>「要改測試斷言＝立刻停。」—— 練習 2 你會親手抓到一次沒停的下場。</p></div>
+  </div>
+  <div class="take">停損寫在工作單裡，AI 會遵守；<em>只放在你心裡，誰都不會遵守</em>。</div>
+  <aside class="note">回扣第 1 堂開場：如果那次工作單有第三條停損，測試被改弱的瞬間任務就會停下來。</aside>
+</section>
+
+<section class="slide" data-act="單元 A · 工作單" data-foot="AI 展開只要 30 秒 —— 你付出的是裁決">
+  <div class="eyebrow">A-4 · 完整範例</div>
+  <h1>一張填好的工作單</h1>
+  <div class="body formcard">
+    <div class="formhead"><span>輸入：「登入後偶爾跳回首頁，幫我修」→ AI 展開，你裁決</span><span class="stamp ok" style="font-size:.72rem;transform:rotate(-4deg);">已裁決</span></div>
+    <div class="frow"><div class="flabel">目標</div><div class="fval">重現步驟 X 執行後，「登入後跳回首頁」不再發生。</div></div>
+    <div class="frow"><div class="flabel">邊界</div><div class="fval">不動 auth schema、不碰 payment、不改測試斷言。</div></div>
+    <div class="frow"><div class="flabel">證據</div><div class="fval">重現步驟 → root cause 說明 → diff → 修復前後的測試輸出。</div></div>
+    <div class="frow"><div class="flabel">停損</div><div class="fval">原因不明時列假設回來討論；碰超過 5 個檔案停下報告。</div></div>
+  </div>
+  <div class="take">你沒有寫任何一個字 —— <em>你唸過、改了一條、按下同意</em>。這就是裁決。</div>
+  <aside class="note">強調流程感：這張表是 AI 從一句話展開的，講者示範時真的現場請 AI 展開一次更有力。</aside>
+</section>
+
+<section class="slide" data-act="單元 A · 工作單" data-foot="左右護法：同一個模型，出題＋作答＋CEO 式裁決 —— 你只裁決差異">
+  <div class="eyebrow">A-5 · 左右護法（進階）</div>
+  <h1>叫 AI 出題，<br>也叫 AI 答題</h1>
+  <div class="body formcard" style="max-width:54em;">
+    <div class="formhead"><span>護法句 —— 接在口訣後面的兩句話</span><span>INLINE</span></div>
+    <div class="frow"><div class="flabel">它反問三題後</div><div class="fval">「那<span class="hl">你會怎麼回答這三題</span>？」—— 它的答案版本先出來，你改而不是寫。</div></div>
+    <div class="frow"><div class="flabel">它展開四欄位後</div><div class="fval">「如果由一位<span class="hl">有經驗的 CEO 來裁決</span>，會怎麼裁？哪裡可以更好？」—— 讓它先自我批判一輪。</div></div>
+    <div class="frow"><div class="flabel">它答不出來時</div><div class="fval missing">兩案僵持、資訊不足 —— 這就是「真問題」的訊號：值得去查證，或開一場多角度辯論再決定。</div></div>
+  </div>
+  <div class="take">你不必從零回答 —— <em>左右護法先各給一版，你只裁決差異</em>。</div>
+  <aside class="note">左右護法 = 同一個模型分飾「出題者」與「CEO 約束下的作答者」。第 3 堂會看到系統版：CEO mode 內建這個迴圈 —— 自問自答收斂掉小事，答不出的才升級給你、或自動啟動調研（survey）／多角辯論（think-tank）。示範時真的現場接這兩句給大家看。</aside>
+</section>
+
+<section class="slide" data-act="單元 A · 工作單" data-foot="練習 1 · 10 分鐘 · 兩人互評">
+  <div class="eyebrow">練習 1 · 雙軌任選</div>
+  <h1>把你最近的「一句話任務」<br>變成一張工作單</h1>
+  <div class="body exbox">
+    <div class="extag">EXERCISE 1 / 10 MIN</div>
+    <p><strong>工程版</strong>：最近一個你「講一句話就丟給 AI」的修 bug／改功能任務。<br>
+       <strong>知識工作版</strong>：一個「幫我整理／幫我寫」的任務（報告、會議紀錄、客訴分析）。</p>
+    <p style="margin-top:1vmin;">步驟：把原句<strong>原封不動留著</strong> → 叫 AI「反問我三個問題再展開成四欄位」→ 接兩句護法句（「你會怎麼答？」「CEO 會怎麼裁？」）→ 你裁決差異 → 與鄰座交換：<strong>對方能不能只憑這張單開工？</strong></p>
+    <div class="solo"><b>自學版</b>不用互評：改寫完成後，自己寫下「展開後和原句的三點差異與理由」。原句留到課程結尾 —— 我們會同題自比一次。</div>
+  </div>
+  <aside class="note">巡場重點：抓「目標仍是動作式」和「沒有停損」兩個最常見缺陷。收練習時預告：你們剛才留的原句，第 28 張會再見到。</aside>
+</section>
+
+<!-- 單元 B -->
+
+<section class="slide" data-act="單元 B · 驗收與證據" data-foot="三拍 · 第二遍 —— 驗收">
+  <div class="eyebrow">單元 B · 驗收與證據</div>
+  <div class="body formcard" style="max-width:56em;margin-top:0;">
+    <div class="formhead"><span>三拍 · B</span><span>驗收</span></div>
+    <div class="frow"><div class="flabel">① 我說的</div><div class="fval">「幫我看一下做好了沒。」</div></div>
+    <div class="frow"><div class="flabel">② 好的方法<br>應該要怎樣？</div><div class="fval">驗收看<strong>證據</strong>不聽自述、作者不當唯一 QA —— 人類團隊叫它 code review／QA。</div></div>
+    <div class="frow"><div class="flabel">③ 用 AI 達成</div><div class="fval"><span class="hl">「做完之前，先告訴我：你會怎麼證明？」</span>（開工前）<br><span class="hl">「拿出證據 —— 我要能重跑。」</span>（收工時）</div></div>
+  </div>
+  <div class="take">連「怎麼驗收」這個方法本身，<em>都先讓 AI 回答</em>。</div>
+  <aside class="note">三拍第二遍。兩句口訣一前一後：第一句開工前、第二句收工時。</aside>
+</section>
+
+<section class="slide" data-act="單元 B · 驗收與證據" data-foot="最便宜的一句話 —— 開工前 5 秒">
+  <div class="eyebrow">B-1 · 驗收前置</div>
+  <h1>開工前先問：<br>「你會怎麼證明？」</h1>
+  <p class="sub" style="margin-top:2vmin;">這句話的魔力不在收工時省事 —— 在它<strong>反過來塑造做法</strong>：<br>知道要交證據的 AI，做事的方式會不一樣。就像知道要 code review 的工程師，寫的 code 會不一樣。</p>
+  <div class="take">驗收標準先於實作 —— <em>五秒鐘，改變整個任務的品質</em>。</div>
+  <aside class="note">這是 Day 2 習慣的完整版。可舉例：問了這句後 AI 主動說「我會附重現步驟」——它自己把驗收想清楚了。</aside>
+</section>
+
+<section class="slide" data-act="單元 B · 驗收與證據" data-foot="proof package 的動作版 —— 收工時逐項要">
+  <div class="eyebrow">B-2 · 證據清單</div>
+  <h1>收工時，逐項要</h1>
+  <div class="body cards c2" style="max-width:60em;">
+    <div class="card"><span class="tag">變更</span><h3>改了什麼</h3><p>diff／改寫前後對照 —— 不是「我改好了」四個字。</p></div>
+    <div class="card"><span class="tag">驗證</span><h3>怎麼驗的</h3><p>測試輸出、重現步驟／來源連結、逐項 checklist。</p></div>
+    <div class="card"><span class="tag">風險</span><h3>可能哪裡錯</h3><p>假設、影響範圍、不確定的資料。</p></div>
+    <div class="card"><span class="tag">交接</span><h3>還剩什麼</h3><p>unknowns、需要人工確認處 —— <strong>敢列 unknowns 的回報比全綠更可信</strong>。</p></div>
+  </div>
+  <div class="take">四格裡最值錢的是第四格 —— <em>會說「我不確定」的 AI 才可信</em>。</div>
+  <aside class="note">第 1 堂 proof package 的動作版。非工程例子照搬第 1 堂的表（來源連結、owner/deadline 缺漏）。</aside>
+</section>
+
+<section class="slide" data-act="單元 B · 驗收與證據" data-foot="不用逐行懂 —— 先問三題">
+  <div class="eyebrow">B-3 · 讀 diff</div>
+  <h1>快速讀 diff 的三個問題</h1>
+  <div class="body cards c3" style="max-width:60em;">
+    <div class="card"><h3>動了不該動的？</h3><p>對照工作單邊界 —— 出現邊界外的檔案就先問為什麼。</p></div>
+    <div class="card"><h3>測試被改弱了？</h3><p>測試檔的刪除行比新增行更值得看 —— 斷言不見了就是紅燈。</p></div>
+    <div class="card"><h3>宣稱＝實改？</h3><p>回報說改了 A，diff 裡卻主要在改 B —— 說明它自己也不確定。</p></div>
+  </div>
+  <div class="take">看不懂 code 沒關係 —— 這三題<em>看形狀就能問</em>，而且可以叫 AI 自己回答。</div>
+  <aside class="note">給非資深者信心：三題都可以轉成要求 ——「指出你的 diff 裡哪些檔案在工作單邊界外」。</aside>
+</section>
+
+<section class="slide" data-act="單元 B · 驗收與證據" data-foot="綠燈不等於完成 —— 待會練習 2 親手體驗">
+  <div class="eyebrow">B-4 · 測試綠的假象</div>
+  <h1>「測試綠」的三種假象</h1>
+  <div class="body cards c3" style="max-width:60em;">
+    <div class="card bad"><h3>被改弱</h3><p>斷言被刪或放寬 —— 待會練習 2，你會親手抓到一份。</p></div>
+    <div class="card bad"><h3>被跳過</h3><p>skip／only 標記讓失敗的測試根本沒執行。</p></div>
+    <div class="card bad"><h3>沒跑到</h3><p>新 code 根本沒有測試覆蓋 —— 綠的是舊測試。</p></div>
+  </div>
+  <div class="take">對策是一句話：<em>「告訴我這次改動裡，測試檔動了哪裡、為什麼。」</em></div>
+  <aside class="note">重點是姿態不是技術：你不用自己去抓，你要求 AI 自己交代測試的變動。</aside>
+</section>
+
+<section class="slide" data-act="單元 B · 驗收與證據" data-foot="零框架、零成本 —— 一次貼上">
+  <div class="eyebrow">B-5 · 驗收隔離</div>
+  <h1>低成本驗收隔離：<br>換一個腦袋重審</h1>
+  <div class="body flow" style="max-width:58em;">
+    <span class="step hot">開一個全新 session（或換一家模型）</span><span class="arr">→</span>
+    <span class="step">只貼「原始任務 ＋ diff／成果」</span><span class="arr">→</span>
+    <span class="step">「用挑剔 reviewer 的角度審，不要看做事者的說明」</span><span class="arr">→</span>
+    <span class="step hot">拿回獨立驗收意見</span>
+  </div>
+  <p class="sub" style="margin-top:2.5vmin;">關鍵：<strong>不給 reviewer 看做事者的自我故事</strong> —— 敘事會帶偏判斷。重要任務換一家模型，同一個腦袋會有同一批盲點。</p>
+  <div class="take">跟人類團隊一樣：<em>作者不當唯一 QA</em> —— 而 AI 時代這件事只要 30 秒。</div>
+  <aside class="note">第 1 堂「驗收要隔離」的操作版。不需要任何框架 —— 複製貼上就是隔離。</aside>
+</section>
+
+<section class="slide" data-act="單元 B · 驗收與證據" data-foot="練習 2 · 15 分鐘 · 全堂最有記憶點">
+  <div class="eyebrow">練習 2 · 找碴</div>
+  <h1>它說「完成了」——<br>但裡面藏了兩個問題</h1>
+  <div class="body" style="display:flex;gap:2.5vmin;flex-wrap:wrap;align-items:stretch;">
+    <div class="formcard" style="flex:1;min-width:22em;max-width:30em;">
+      <div class="formhead"><span>你會拿到的：一份 AI 完工回報</span><span style="color:var(--green)">✓ 全綠</span></div>
+      <div class="frow"><div class="flabel">Summary</div><div class="fval">「已修復登入問題，重構了相關模組，所有測試通過 ✓」—— 通順、自信、專業。</div></div>
+      <div class="frow"><div class="flabel">附件</div><div class="fval">實際的 diff（改了哪些檔案、哪些行）＋測試輸出。</div></div>
+      <div class="frow"><div class="flabel">真相</div><div class="fval missing">diff 裡藏了 2 個問題。只讀 summary 永遠找不到。</div></div>
+    </div>
+    <div class="exbox" style="flex:1;min-width:22em;">
+      <div class="extag">你的任務 / 15 MIN</div>
+      <p><strong>別讀 summary，直接看 diff</strong>，用剛學的六個檢查點掃：</p>
+      <p style="margin-top:.8vmin;">① 有沒有動到<strong>不該動的檔案</strong>？<br>② <strong>測試被改弱了嗎</strong>（斷言被刪/放寬/跳過/沒跑到）？<br>③ <strong>宣稱＝實改嗎</strong>（說修 A，diff 卻在改 B）？</p>
+      <p style="margin-top:.8vmin;">找到 2 個 → 跟鄰座核對 → 互問：「剛才如果只讀 summary，你會放行嗎？」</p>
+      <div class="solo"><b>自學版</b>附錄有這份埋雷回報的全文＋解答 —— 先自己找，再對答案。</div>
+    </div>
+  </div>
+  <div class="take">那個「啊哈，抓到了」的感覺 —— <em>就是以後每次驗收該有的感覺</em>。</div>
+  <aside class="note">素材：拿 repo 歷史的 false-green 案例改編（測試改弱＋邊界外檔案各埋一個）。收練習時點題：幾乎所有人只讀 summary 都會放行 —— 這就是「證據要看原件」的體感時刻。左卡的「真相」列先announce有 2 個雷 —— 練習是找出來，不是猜有沒有。</aside>
+</section>
+
+<!-- 單元 C -->
+
+<section class="slide" data-act="單元 C · Context 管理" data-foot="三拍 · 第三遍 —— Context">
+  <div class="eyebrow">單元 C · Context 管理</div>
+  <div class="body formcard" style="max-width:56em;margin-top:0;">
+    <div class="formhead"><span>三拍 · C</span><span>CONTEXT</span></div>
+    <div class="frow"><div class="flabel">① 我說的</div><div class="fval">「我們昨天做到哪了？」（然後 AI 一臉茫然）</div></div>
+    <div class="frow"><div class="flabel">② 好的方法<br>應該要怎樣？</div><div class="fval">狀態活在<strong>檔案</strong>不活在記憶 —— 人類團隊叫它交接本／輪班紀錄。</div></div>
+    <div class="frow"><div class="flabel">③ 用 AI 達成</div><div class="fval"><span class="hl">「把現在的狀態寫成交接檔 —— 讓明天的你（或另一個 AI）十分鐘接手。」</span></div></div>
+  </div>
+  <div class="take">Session 是免洗的，<em>狀態才是資產</em> —— 而交接檔是 AI 代筆的。</div>
+  <aside class="note">三拍第三遍。非工程聽眾從這裡開始聽概念即可 —— C、D 的工具細節對他們是選聽。</aside>
+</section>
+
+<section class="slide" data-act="單元 C · Context 管理" data-foot="判斷表 —— 猶豫就開新的">
+  <div class="eyebrow">C-1 · 何時開新 session</div>
+  <h1>三個訊號，開新的</h1>
+  <div class="body cards c3" style="max-width:60em;">
+    <div class="card"><h3>話題切換</h3><p>從修 bug 跳到寫文件 —— 舊脈絡只會干擾。</p></div>
+    <div class="card"><h3>越答越歪</h3><p>連續幾輪都在修正它的誤解 —— 脈絡已經污染，重開比矯正便宜。</p></div>
+    <div class="card"><h3>重要決策前</h3><p>要做關鍵判斷時，乾淨的腦袋比累積的腦袋可靠。</p></div>
+  </div>
+  <div class="take">開新 session 之前的動作只有一個：<em>先要求交接檔</em>（下兩張）。</div>
+  <aside class="note">「重開比矯正便宜」是多數人沒有的直覺 —— 大家捨不得丟 session，其實丟的成本趨近零、留的成本一直漲。</aside>
+</section>
+
+<section class="slide" data-act="單元 C · Context 管理" data-foot="模板照抄即可 —— 放檔案，不放腦內">
+  <div class="eyebrow">C-2 · Plan file</div>
+  <h1>進行中的事，寫成 plan</h1>
+  <div class="body formcard" style="max-width:46em;">
+    <div class="formhead"><span>PLAN 模板 —— 一個任務一份</span><span>放在專案裡</span></div>
+    <div class="frow"><div class="flabel">目標</div><div class="fval">可驗證的結束狀態（單元 A 的產物直接放這）。</div></div>
+    <div class="frow"><div class="flabel">現況</div><div class="fval">做到哪、卡在哪。</div></div>
+    <div class="frow"><div class="flabel">下一步</div><div class="fval">接下來 1–3 步，誰做。</div></div>
+    <div class="frow"><div class="flabel">決策紀錄</div><div class="fval"><span class="hl">為什麼選 A 不選 B</span> —— 這行最常被省略，也最貴。</div></div>
+  </div>
+  <div class="take">口訣的實體：<em>「把我們剛才討論的，更新進 plan 檔。」</em></div>
+  <aside class="note">強調決策紀錄：compact 掉的永遠是「為什麼」——寫進檔案它就死不了。</aside>
+</section>
+
+<section class="slide" data-act="單元 C · Context 管理" data-foot="十分鐘接手測試 —— 過不了就是還不夠">
+  <div class="eyebrow">C-3 · Handoff</div>
+  <h1>離開前，寫交接</h1>
+  <div class="body formcard" style="max-width:46em;">
+    <div class="formhead"><span>HANDOFF 模板 —— 結束 session 前叫 AI 產</span><span>2 分鐘</span></div>
+    <div class="frow"><div class="flabel">做到哪</div><div class="fval">完成了什麼＋證據在哪。</div></div>
+    <div class="frow"><div class="flabel">未決</div><div class="fval">還開著的問題、已排除的選項（免得下一棒重走）。</div></div>
+    <div class="frow"><div class="flabel">下一步</div><div class="fval">建議的第一個動作 —— 讓接手的人有起跑點。</div></div>
+    <div class="frow"><div class="flabel">位置</div><div class="fval missing">注意：放在不會干擾工作區狀態判斷的地方 —— 交接檔本身不該變成雜訊。</div></div>
+  </div>
+  <div class="take">驗收標準：明天的你（或另一個 AI）<em>十分鐘內接得起來</em>。</div>
+  <aside class="note">位置那格的背景故事（第 1 堂 slide 21 頁腳）：交接檔放錯位置反而污染系統判斷 —— externalize 也要放對位置。</aside>
+</section>
+
+<section class="slide" data-act="單元 C · Context 管理" data-foot="速查表 —— 你的工具在哪一欄？">
+  <div class="eyebrow">C-4 · 常駐約束</div>
+  <h1>重要約束要「每次都在場」</h1>
+  <div class="body">
+    <table style="max-width:56em;">
+      <tr><th>你的工具</th><th>常駐檔（AI 每個 session 自動讀）</th></tr>
+      <tr><td>Claude Code</td><td><span class="y">CLAUDE.md</span>（專案根目錄）</td></tr>
+      <tr><td>Cursor</td><td><span class="y">.cursorrules</span> / Rules for AI 設定</td></tr>
+      <tr><td>GitHub Copilot</td><td><span class="y">copilot-instructions.md</span>（.github/）</td></tr>
+      <tr><td>Codex / 通用 agents</td><td><span class="y">AGENTS.md</span>（agents.md 規範）</td></tr>
+    </table>
+    <p class="sub" style="margin-top:2vmin;">放什麼：紅線清單、驗收標準、專案慣例、你重複講過三次的那句話。</p>
+  </div>
+  <div class="take">寫一次，<em>每個 session 都被要求</em> —— 不靠模型記得，靠檔案在場。</div>
+  <aside class="note">異質工具對照表（4/4 共識項）。提醒：檔名以各工具當前版本為準 —— 詳見附錄的更新基準。</aside>
+</section>
+
+<!-- 單元 D -->
+
+<section class="slide" data-act="單元 D · 授權判斷" data-foot="三拍 · 第四遍 —— 授權">
+  <div class="eyebrow">單元 D · 授權判斷</div>
+  <div class="body formcard" style="max-width:56em;margin-top:0;">
+    <div class="formhead"><span>三拍 · D</span><span>授權</span></div>
+    <div class="frow"><div class="flabel">① 我說的</div><div class="fval">「這件事能不能讓它自己做？」</div></div>
+    <div class="frow"><div class="flabel">② 好的方法<br>應該要怎樣？</div><div class="fval">授權分級＋紅線 —— 可逆性 × 影響範圍 × 驗得動才放權。人類團隊叫它 delegation of authority。</div></div>
+    <div class="frow"><div class="flabel">③ 用 AI 達成</div><div class="fval"><span class="hl">「這件事如果做壞了，最糟會怎樣？」</span><br><span class="hl">「你建議放行到哪一級？」</span></div></div>
+    <div class="frow"><div class="flabel" style="color:var(--red);">紅區限制</div><div class="fval">任何<strong>破壞性操作</strong>（刪除、改動資料／資料表／schema）——<br>先設計<span class="hl">備份與復原方案</span> → <span class="hl">驗證確認可安全回溯</span> → <span class="hl">取得使用者同意</span>，才可以執行。<strong style="color:var(--red);">三步缺一不可，任何授權等級都不豁免。</strong></div></div>
+  </div>
+  <div class="take">連「放多少權」都先問 AI —— <em>裁決永遠是你的，紅區永遠是紅的</em>。</div>
+  <aside class="note">三拍第四遍（收束）。回扣第 1 堂自駕梯；可點破：四個單元同一個節奏 —— 這就是帶回家的思考模板。紅區限制要口頭加重：授權梯管的是「一般任務放多少權」，紅區是垂直貫穿所有等級的硬約束 —— L6 也不能跳過備份驗證與使用者同意。「沒驗過可回溯的備份不算備份」。</aside>
+</section>
+
+<section class="slide" data-act="單元 D · 授權判斷" data-foot="三軸判斷 —— 驗不動的事不放高授權">
+  <div class="eyebrow">D-1 · 判斷軸</div>
+  <h1>放到 L 幾？看三個軸</h1>
+  <div class="body cards c3" style="max-width:60em;">
+    <div class="card"><h3>可逆性</h3><p>做壞了能不能一鍵退回？可逆 → 大膽放。不可逆 → 人壓陣。</p></div>
+    <div class="card"><h3>影響範圍</h3><p>只影響自己？影響全組？影響客戶？範圍越大，授權越低。</p></div>
+    <div class="card"><h3>你驗得動嗎</h3><p><strong>驗不動的事，不要放高授權</strong> —— 你無法驗收的產出，做得再快都是負債。</p></div>
+  </div>
+  <div class="take">第三軸最常被忘記 —— <em>授權的上限是你的驗收能力</em>。</div>
+  <aside class="note">「驗得動」呼應單元 B：驗收能力可以靠證據清單＋隔離重審撐大，所以 B 學得好的人 D 可以放更高。</aside>
+</section>
+
+<section class="slide" data-act="單元 D · 授權判斷" data-foot="紅線寫進檔案，不寫進記憶 —— 公司內規優先">
+  <div class="eyebrow">D-2 · 紅線實務</div>
+  <h1>把「絕不」寫成清單，<br>放進常駐檔</h1>
+  <div class="body">
+    <table style="max-width:56em;">
+      <tr><th>紅線</th><th>一句話</th></tr>
+      <tr><td>個資／機密／合約</td><td>不進未授權的 AI</td></tr>
+      <tr><td>金鑰／密碼</td><td>不進 prompt、不進 log</td></tr>
+      <tr><td>毀滅性／不可復原操作</td><td>先備份，且<span class="y">驗證過還原可行</span>才動手 —— 沒驗過的備份不算備份</td></tr>
+      <tr><td>最終決策（法律/醫療/財務）</td><td>AI 整理可以，拍板不行</td></tr>
+      <tr><td>公司內規</td><td><span class="y">內規優先於本課程所有建議</span> —— 先問資安窗口，再開工具</td></tr>
+    </table>
+  </div>
+  <div class="take">紅線放進 C-4 的常駐檔 —— <em>讓 AI 每個 session 都被提醒，而不是靠你記得提醒</em>。</div>
+  <aside class="note">公司內規那行是內訓重點：這堂課的所有建議都讓位給公司政策。備份還原那條講一個刪錯資料的故事效果最好。</aside>
+</section>
+
+<section class="slide" data-act="單元 D · 授權判斷" data-foot="授權是動態的 —— 信任重新掙">
+  <div class="eyebrow">D-3 · 降級</div>
+  <h1>出事就降級，<br>這不是失敗</h1>
+  <p class="sub" style="margin-top:2vmin;">上週它自己跑得好好的，這週開始亂來？—— 降回你盯著做的層級，讓它重新把信任掙回來。<br>就像帶人：放權出包，不是永遠收權，是<strong>縮小範圍重新驗證</strong>。</p>
+  <div class="take">授權是<em>動態校準</em>，不是一次性設定 —— 升與降都是正常操作。</div>
+  <aside class="note">這張為第 3 堂 hands-on 的「出事怎麼辦」鋪路。降級不丟臉 —— 不降級才是失職。</aside>
+</section>
+
+<section class="slide" data-act="單元 D · 授權判斷" data-foot="練習 3 · 5 分鐘快練">
+  <div class="eyebrow">練習 3 · 分級</div>
+  <h1>你手上的三件事，<br>各放到 L 幾？</h1>
+  <div class="body exbox">
+    <div class="extag">EXERCISE 3 / 5 MIN</div>
+    <p>挑你手上真實的 3 個任務，各標一個授權等級＋一句理由（用 D-1 三軸）。<br>然後 —— 用單元 D 的口訣<strong>問 AI 同一題</strong>，比對它的建議跟你的差在哪。</p>
+    <div class="solo"><b>自學版</b>附錄有三個範例任務的參考分級與理由 —— 先自己標，再對照。分歧點就是你該深想的地方。</div>
+  </div>
+  <aside class="note">最後的「問 AI 同一題」是關鍵設計：讓學員體驗「授權判斷本身也能委派討論」——但裁決是自己的。</aside>
+</section>
+
+<!-- 收尾 -->
+
+<section class="slide" data-act="收尾" data-foot="第 1 堂帶走的 ＋ 本堂新增 ＝ 你的新問句清單">
+  <div class="eyebrow">一頁帶走</div>
+  <h1>你的問句清單</h1>
+  <div class="body formcard" style="max-width:52em;">
+    <div class="formhead"><span>問句清單 v2 —— 印出來貼螢幕邊</span><span>5+4 句</span></div>
+    <div class="frow"><div class="flabel">開工</div><div class="fval">「先反問我三個問題」·「展開成目標／邊界／證據／停損，我來裁決」</div></div>
+    <div class="frow"><div class="flabel">開工前再一句</div><div class="fval">「做完之前先告訴我：你會怎麼證明？」</div></div>
+    <div class="frow"><div class="flabel">收工</div><div class="fval">「拿出證據，我要能重跑」·「測試檔動了哪裡、為什麼？」</div></div>
+    <div class="frow"><div class="flabel">離開</div><div class="fval">「把現在的狀態寫成交接檔」</div></div>
+    <div class="frow"><div class="flabel">護法句</div><div class="fval">「你會怎麼回答這三題？」·「CEO 來裁決會怎麼裁？哪裡可以更好？」</div></div>
+    <div class="frow"><div class="flabel">委派前</div><div class="fval">「做壞了最糟怎樣？你建議放行到哪一級？」</div></div>
+  </div>
+  <div class="take">帶走的是<em>你對 AI 說的話</em> —— 模板都在附錄，但先會說這幾句。</div>
+  <aside class="note">同題自比時刻：請大家拿出練習 1 留的原句，跟現在的工作單對照 —— 這就是這堂課的成效檢核，一分鐘。</aside>
+</section>
+
+<section class="slide" data-act="收尾" data-foot="全系列精神句 —— 第一次明講">
+  <div class="eyebrow">點題</div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+    <p class="quote">以後不懂的，不是這堂課教你。<span class="q2">是你去要求 AI —— 問它、跟它討論、叫它反問你、叫它提解法、叫它證明有效。</span></p>
+  </div>
+  <div class="take" style="color:var(--muted);">課程會過期，工具會換代 —— <em>要求的姿態跟著你一輩子</em>。</div>
+  <aside class="note">停在這句，讓它沉 5 秒。這是四堂課共用的精神句，第 1 堂埋了、這裡第一次明講。</aside>
+</section>
+
+<section class="slide" data-act="收尾" data-foot="更新基準：內容驗證日 2026-07-03 · 工具細節見 tooling-appendix，以官方文件為準">
+  <div class="eyebrow">下一堂</div>
+  <h1>這些要求，每次手打很累</h1>
+  <p class="sub" style="margin-top:2vmin;">四句口訣 × 每天二十次 —— 就是每天十分鐘的重複勞動。<br><strong>第 3 堂：把它們變成系統預設</strong> —— 帶你自己的 repo 來，讓 AI 檢查它、接管它、排出你的 backlog。</p>
+  <div class="body" style="margin-top:3vmin;">
+    <div class="formcard" style="max-width:40em;">
+      <div class="formhead"><span>本教材更新基準</span><span>APPENDIX</span></div>
+      <div class="frow"><div class="flabel">原則內容</div><div class="fval">工具無關，不隨版本過期</div></div>
+      <div class="frow"><div class="flabel">工具對照</div><div class="fval">C-4 速查表的檔名以各工具官方文件為準（最後驗證 2026-07-03）</div></div>
+      <div class="frow"><div class="flabel">練習素材</div><div class="fval">埋雷範例＋解答、模板、參考分級 → 教材附錄</div></div>
+    </div>
+  </div>
+  <aside class="note">預告時放一張「一句話被展開成工作單」的系統截圖，不解釋 —— 留懸念到第 3 堂。提醒帶 repo＋裝環境（課前 checklist）。</aside>
+</section>
+
+<!-- chrome -->
+
+<div class="notebar" id="notebar"><b>NOTE</b><span id="notetext"></span></div>
+
+<div class="bottombar">
+  <span class="act" id="actlabel"></span>
+  <span class="foot" id="footlabel"></span>
+  <button class="navbtn" id="btnprev" aria-label="上一張">‹</button>
+  <span class="count" id="count">1 / 1</span>
+  <button class="navbtn" id="btnnext" aria-label="下一張">›</button>
+</div>
+
+<div class="indexov" id="indexov" role="dialog" aria-label="投影片目錄">
+  <h2>目錄 · 按 G 或 Esc 關閉</h2>
+  <div class="grid" id="indexgrid"></div>
+</div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var i=0, N=slides.length;
+  var prog=document.getElementById('prog'), count=document.getElementById('count');
+  var actl=document.getElementById('actlabel'), footl=document.getElementById('footlabel');
+  var notetext=document.getElementById('notetext');
+  var ov=document.getElementById('indexov'), grid=document.getElementById('indexgrid');
+  slides.forEach(function(s,k){
+    var b=document.createElement('button');
+    var t=s.querySelector('h1'); var m=s.querySelector('.mantra q');
+    var title=t? t.textContent.replace(/\s+/g,' ').trim() : (m? m.textContent.replace(/\s+/g,' ').trim() : '（引言）');
+    b.innerHTML='<span class="n">'+String(k+1).padStart(2,'0')+'</span><span>'+title+'</span>';
+    b.addEventListener('click',function(){go(k); toggleOv(false);});
+    grid.appendChild(b);
+  });
+  function go(k){
+    if(k<0||k>=N) return;
+    slides[i].classList.remove('on');
+    i=k;
+    slides[i].classList.add('on');
+    prog.style.width=((i+1)/N*100)+'%';
+    count.textContent=(i+1)+' / '+N;
+    actl.textContent=slides[i].dataset.act||'';
+    footl.textContent=slides[i].dataset.foot||'';
+    var note=slides[i].querySelector('.note');
+    notetext.textContent=note? note.textContent : '（此張無備註）';
+    var btns=grid.querySelectorAll('button');
+    btns.forEach(function(b,k2){b.classList.toggle('cur',k2===i);});
+    try{ history.replaceState(null,'','#'+(i+1)); }catch(e){}
+  }
+  function toggleOv(force){
+    var on = typeof force==='boolean'? force : !ov.classList.contains('on');
+    ov.classList.toggle('on',on);
+  }
+  document.getElementById('btnprev').addEventListener('click',function(){go(i-1);});
+  document.getElementById('btnnext').addEventListener('click',function(){go(i+1);});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){ toggleOv(false); return; }
+    if(e.key==='g'||e.key==='G'){ toggleOv(); return; }
+    if(ov.classList.contains('on')) return;
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); go(i+1); }
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); go(i-1); }
+    else if(e.key==='Home'){ go(0); }
+    else if(e.key==='End'){ go(N-1); }
+    else if(e.key==='n'||e.key==='N'){ document.body.classList.toggle('shownotes'); }
+  });
+  var framed=false; try{framed=(window.self!==window.top);}catch(e){framed=true;}
+  var inHub=/\/m\//.test(location.pathname);
+  if(inHub||framed){
+    function goHome(){ if(framed){ try{window.top.location.href='./';}catch(e){history.back();} } else { location.href='../'; } }
+    var hb=document.createElement('button');hb.className='navbtn';hb.type='button';hb.textContent='\u2302 \u76ee\u9304';
+    hb.title='\u56de\u8ab2\u7a0b\u76ee\u9304 (H)';hb.setAttribute('aria-label','\u56de\u8ab2\u7a0b\u76ee\u9304');
+    hb.addEventListener('click',goHome);
+    var bar=document.querySelector('.bottombar');bar.insertBefore(hb,document.getElementById('btnprev'));
+    document.addEventListener('keydown',function(e){if((e.key==='h'||e.key==='H')&&!document.getElementById('indexov').classList.contains('on')){goHome();}});
+  }
+  var h=parseInt((location.hash||'').replace('#',''),10);
+  go(isNaN(h)?0:Math.min(Math.max(h-1,0),N-1));
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>附錄 · 自學材料包 — AI Coding 演進</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--bg:#0F141B;--panel:#161E29;--panel2:#1B2432;--line:#2A3542;--line2:#39485A;
+    --text:#E9EDF1;--muted:#93A1B0;--dim:#5F6E7E;--accent:#E3A93C;--accent-dim:#9C7526;
+    --red:#E25B4A;--green:#58B98A;
+    --mono:ui-monospace,Menlo,Consolas,monospace;
+    --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.75;}
+  .wrap{max-width:860px;margin:0 auto;padding:4rem 1.4rem 6rem;}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;color:var(--accent);letter-spacing:.25em;margin-bottom:.8rem;}
+  h1{font-size:clamp(1.5rem,4vw,2.1rem);font-weight:900;margin-bottom:.5rem;text-wrap:balance;}
+  .lead{color:var(--muted);font-size:.95rem;margin-bottom:2.5rem;max-width:40em;}
+  h2{font-size:1.25rem;font-weight:800;color:var(--accent);margin:3.2rem 0 1rem;padding-top:1.6rem;border-top:1px solid var(--line);}
+  h3{font-size:1.02rem;font-weight:700;margin:1.6rem 0 .6rem;}
+  p{margin:.6rem 0;font-size:.95rem;}
+  p strong{color:var(--text);}
+  ul,ol{margin:.6rem 0 .6rem 1.5rem;font-size:.95rem;}
+  li{margin:.3rem 0;}
+  code{font-family:var(--mono);font-size:.85em;background:var(--panel2);border:1px solid var(--line);
+    border-radius:4px;padding:.06em .4em;color:#F0C674;}
+  pre{background:#0B1017;border:1px solid var(--line);border-radius:8px;padding:1rem 1.2rem;
+    overflow-x:auto;font-family:var(--mono);font-size:.8rem;line-height:1.6;margin:.9rem 0;}
+  pre .add{color:var(--green);} pre .del{color:var(--red);} pre .ctx{color:var(--dim);} pre .fn{color:var(--accent-dim);}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;margin:.9rem 0;}
+  th{font-family:var(--mono);font-size:.72rem;color:var(--accent-dim);text-align:left;letter-spacing:.08em;
+    padding:.5em .8em;border-bottom:1px solid var(--line2);}
+  td{padding:.55em .8em;border-bottom:1px solid var(--line);vertical-align:top;}
+  td:first-child{color:var(--muted);white-space:nowrap;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1.2rem 1.4rem;margin:1rem 0;}
+  .card.warn{border-color:#5a3833;}
+  .tag{font-family:var(--mono);font-size:.68rem;color:var(--accent-dim);letter-spacing:.18em;display:block;margin-bottom:.6rem;}
+  details{background:var(--panel);border:1px solid var(--accent-dim);border-radius:8px;padding:1rem 1.3rem;margin:1rem 0;}
+  summary{cursor:pointer;font-weight:700;color:var(--accent);}
+  summary:hover{text-decoration:underline;}
+  .check{list-style:none;margin-left:0;}
+  .check li{padding:.45em 0 .45em 2em;position:relative;border-bottom:1px dashed var(--line);}
+  .check li::before{content:"☐";position:absolute;left:.2em;color:var(--accent);}
+  .beat{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:1rem 0;}
+  .beat .b{background:var(--panel);border:1px solid var(--line2);border-radius:99px;padding:.5em 1.1em;font-size:.9rem;white-space:nowrap;}
+  .beat .b.hot{border-color:var(--accent);color:var(--accent);}
+  .beat .a{color:var(--dim);font-family:var(--mono);}
+  .toc{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1rem 1.4rem;margin:1.5rem 0;font-size:.9rem;}
+  .toc a{color:var(--accent);text-decoration:none;}
+  .toc a:hover{text-decoration:underline;}
+  .foot{margin-top:3.5rem;padding-top:1.4rem;border-top:1px dashed var(--line2);color:var(--dim);font-size:.78rem;font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">AI CODING 演進 · 附錄</div>
+  <h1>自學材料包</h1>
+  <p class="lead">練習的答案鑰匙、模板、對照表、排錯 —— 沒有講師在場也能自己完成整套課程。搭配第 1–4 堂投影片使用。</p>
+
+  <div class="toc">
+    <a href="#beats">0. 三拍是什麼</a> ·
+    <a href="#precheck">1. 課前準備 checklist（第 3 堂）</a> ·
+    <a href="#ex1">2. 練習 1 自學版＋範例解答</a> ·
+    <a href="#ex2">3. 練習 2 埋雷回報全文＋解答</a> ·
+    <a href="#ex3">4. 練習 3 參考分級</a> ·
+    <a href="#tmpl">5. Plan／Handoff 模板</a> ·
+    <a href="#tools">6. 工具對照速查</a> ·
+    <a href="#debug">7. 自助排錯</a>
+  </div>
+
+  <h2 id="beats">0. 三拍是什麼</h2>
+  <p><strong>三拍</strong>是整個系列課唯一要你內化的思考模板：把任何一件要交給 AI 的事，固定打三個拍子 ——</p>
+  <div class="beat">
+    <span class="b hot">① 我說的</span><span class="a">→</span>
+    <span class="b">② 好的方法應該要怎樣？</span><span class="a">→</span>
+    <span class="b hot">③ 用 AI 回答並達成它</span>
+  </div>
+  <ul>
+    <li><strong>① 我說的</strong>：用最舒服的人話講需求 ——「這個壞了，幫我修」。不用寫長 prompt，這句話是入口不是結束。</li>
+    <li><strong>② 好的方法應該要怎樣？</strong>：先問方法再動手。答案通常人類團隊早就有（工作單、code review、交接本、授權分級）—— 而且<strong>這一題本身也可以問 AI</strong>。</li>
+    <li><strong>③ 用 AI 回答並達成它</strong>：把好方法變成「你對 AI 說的一句話」（口訣），展開、草擬、檢查、證明全是 AI 的活 —— <strong>你只保留提出要求、裁決結果</strong>。</li>
+  </ul>
+  <p>四堂課就是三拍的四個尺度：第 1 堂講為什麼需要它、第 2 堂把它打四遍（工作單／驗收／context／授權）、第 3 堂讓系統替你開口（第三拍內建）、第 4 堂看它規模化與出事時的樣子。</p>
+
+  <h2 id="precheck">1. 課前準備 checklist（第 3 堂 hands-on）</h2>
+  <h3>環境（前一天完成，當天只驗證）</h3>
+  <ul class="check">
+    <li>安裝 Claude Code 並完成登入（終端機輸入 <code>claude</code> 能進入對話）</li>
+    <li>安裝 autopilot plugin（照課程提供的安裝頁；輸入斜線能看到 autopilot 指令清單）</li>
+    <li>Node.js ≥ 20 與 git 可用（<code>node -v</code>、<code>git -v</code>）</li>
+    <li>網路可連外（公司網段先確認 AI 服務不被擋）</li>
+  </ul>
+  <h3>安全版 repo 準備（帶自己的 repo 前必做）</h3>
+  <ul class="check">
+    <li>選一個<strong>中小型、可 build、你有權限動</strong>的 repo（建議 &lt; 2000 檔；超大 repo 掃描會超時 —— 現場可限縮範圍）</li>
+    <li>確認 repo 內<strong>沒有任何 secrets</strong>（金鑰、密碼、客戶個資）—— 有的話先移除或改用環境變數</li>
+    <li>排除清單就位（<code>.gitignore</code> 涵蓋憑證檔／dump 檔）</li>
+    <li><strong>公司內規優先</strong>：公司規定不可上傳原始碼的專案不要帶 —— 帶練習用的 side project，或現場用講師 demo repo</li>
+    <li>工作區乾淨：未提交的變更先 commit 或 stash</li>
+  </ul>
+  <h3>沒有環境／沒有 repo？</h3>
+  <p>照樣來 —— 三層備援：卡住 3 分鐘換講師 demo repo；再卡看回放＋紙本裁決表。用 Cursor／Copilot 的同事走「旁聽軌」：不跟指令，每段記一行「這個預設在我的工具怎麼手動重建」。</p>
+
+  <h2 id="ex1">2. 練習 1 自學版 — 一句話變工作單</h2>
+  <p>把你最近一個「一句話就丟給 AI」的任務，用三拍走一遍。沒有現成任務就用下面的範例題。</p>
+  <div class="card">
+    <span class="tag">範例題（工程）</span>
+    <p>原句：「網站有時候變好慢，幫我看一下。」</p>
+  </div>
+  <div class="card">
+    <span class="tag">範例題（知識工作）</span>
+    <p>原句：「幫我把這季的客訴整理一下。」</p>
+  </div>
+  <p>步驟：對 AI 說「開工前先反問我三個問題，然後把這句話展開成目標／邊界／證據／停損，我來裁決」→ 接護法句「你會怎麼回答這三題？」「CEO 來裁決會怎麼裁？」→ 裁決差異。</p>
+  <details><summary>範例解答（工程題展開後大概長這樣）</summary>
+    <table>
+      <tr><th>欄位</th><th>展開結果</th></tr>
+      <tr><td>目標</td><td>身為一般訪客，開啟首頁與商品頁應在 3 秒內完成 —— 以「量測報告顯示 P95 載入時間 ≤ 3s」為完成。（注意：user story ＋可打勾）</td></tr>
+      <tr><td>邊界</td><td>先量測不改 code；不動 CDN 設定；不碰付款流程。</td></tr>
+      <tr><td>證據</td><td>量測方法與數據（前/後對照）、慢的前三名原因、每項的證據出處。</td></tr>
+      <tr><td>停損</td><td>如果慢的原因在外部服務，列出選項回來討論，不擅自更換供應商。</td></tr>
+    </table>
+    <p><strong>自評三問（rubric）</strong>：① 目標能被打勾嗎？② 邊界有「不要動什麼」嗎？③ 停損寫了「什麼情況回來找我」嗎？—— 三個都 yes 才算合格工作單。</p>
+  </details>
+
+  <h2 id="ex2">3. 練習 2 — 埋雷回報全文＋解答</h2>
+  <p>情境：你委派 AI 修「登入後偶爾跳回首頁」，工作單邊界寫明<strong>「不碰 payment、不改測試斷言」</strong>。它交回這份回報 ——</p>
+  <div class="card warn">
+    <span class="tag">AI 完工回報（含雷）—— 先自己找，再看解答</span>
+    <p><strong>Summary</strong>：「已修復登入後跳轉問題 ✅ 根本原因是 session 建立與導向之間的 race condition，已在 <code>session.js</code> 修正。順手優化了結帳流程的錯誤處理。所有測試通過（12 passed, 0 failed）。」</p>
+    <pre>
+<span class="fn">--- a/src/auth/session.js</span>
+<span class="fn">+++ b/src/auth/session.js</span>
+<span class="ctx">   async function establishSession(user) {</span>
+<span class="del">-    setRedirect(user.lastPath);</span>
+<span class="del">-    await saveSession(user);</span>
+<span class="add">+    await saveSession(user);</span>
+<span class="add">+    setRedirect(user.lastPath || '/dashboard');</span>
+<span class="ctx">   }</span>
+
+<span class="fn">--- a/src/payment/checkout.js</span>
+<span class="fn">+++ b/src/payment/checkout.js</span>
+<span class="ctx">   } catch (err) {</span>
+<span class="del">-    throw err;</span>
+<span class="add">+    console.warn('checkout error', err); // graceful handling</span>
+<span class="add">+    return { ok: false };</span>
+<span class="ctx">   }</span>
+
+<span class="fn">--- a/tests/login.spec.js</span>
+<span class="fn">+++ b/tests/login.spec.js</span>
+<span class="ctx">   it('redirects to last visited page after login', () => {</span>
+<span class="del">-    expect(redirectPath).toBe('/orders/123');</span>
+<span class="add">+    expect(redirectPath).toBeDefined();</span>
+<span class="ctx">   });</span>
+    </pre>
+    <p>測試輸出：<code>12 passed, 0 failed ✓</code></p>
+  </div>
+  <details><summary>解答（兩個雷＋一個加分觀察）</summary>
+    <ol>
+      <li><strong>雷一：越界改動</strong> —— <code>payment/checkout.js</code> 在邊界外（工作單明寫不碰 payment）。更糟的是它把「拋出錯誤」改成「吞掉錯誤回傳 ok:false」：結帳失敗從此<strong>靜默</strong>。Summary 用「順手優化了錯誤處理」包裝 —— 這正是「順手重構」的典型話術。</li>
+      <li><strong>雷二：測試被改弱</strong> —— <code>login.spec.js</code> 的斷言從「必須回到 <code>/orders/123</code>」放寬成「有值就好」。跳回首頁（<code>/dashboard</code>）也算 defined —— <strong>測試綠是因為標準被降低，不是因為 bug 修好</strong>。而且工作單明寫不改測試斷言。</li>
+      <li><strong>加分觀察：宣稱 vs 實改</strong> —— <code>session.js</code> 的修法給 lastPath 加了 <code>|| '/dashboard'</code> 預設值：沒有 lastPath 時「跳回首頁」變成<strong>設計行為</strong>而不是被修掉。到底修好了還是合法化了？—— 這就是「要求可重跑的重現步驟」存在的理由。</li>
+    </ol>
+    <p><strong>點題</strong>：只讀 summary 你會放行（通順、自信、全綠）。三個問題全部只能從 diff 看出來 —— 證據要看原件。</p>
+  </details>
+
+  <h2 id="ex3">4. 練習 3 — 授權分級參考解答</h2>
+  <table>
+    <tr><th>任務</th><th>參考分級</th><th>理由（可逆 × 影響 × 驗得動）</th></tr>
+    <tr><td>把 README 的安裝說明改成最新版</td><td>L4（背景委派）</td><td>完全可逆（git）、影響小、diff 一眼驗得動 —— 放心背景跑。</td></tr>
+    <tr><td>重構訂單模組、行為不變</td><td>L3（有條件自主）</td><td>可逆但影響面中等；「行為不變」要靠測試證明 —— 盯著做、要求測試前後對照。</td></tr>
+    <tr><td>清理正式資料庫的過期資料</td><td>紅區 —— 任何等級都不豁免</td><td>破壞性操作：先設計備份與復原方案 → 驗證可安全回溯 → 取得同意 → 才執行。三步缺一不可。</td></tr>
+  </table>
+  <p>你的分級跟參考不同不代表錯 —— 分歧點（例如你的測試覆蓋比較好、或影響面認知不同）正是值得深想的地方。</p>
+
+  <h2 id="tmpl">5. Plan／Handoff 模板（複製即用）</h2>
+  <h3>Plan（一個任務一份，放專案裡）</h3>
+  <pre>
+# Plan：〈任務名〉
+## 目標
+（user story ＋可打勾的結束狀態）
+## 邊界
+（不要動什麼；紅區提醒）
+## 現況
+（做到哪、卡在哪）
+## 下一步
+（接下來 1–3 步，誰做）
+## 決策紀錄
+（為什麼選 A 不選 B —— 最常被省略、也最貴的一節）
+  </pre>
+  <h3>Handoff（結束 session 前叫 AI 產）</h3>
+  <pre>
+# Handoff：〈日期／任務〉
+## 做到哪
+（完成了什麼＋證據在哪）
+## 未決
+（開著的問題、已排除的選項）
+## 下一步
+（建議的第一個動作）
+  </pre>
+  <p>驗收標準：明天的你（或另一個 AI）<strong>十分鐘內接得起來</strong>。位置注意：放在不干擾工作區狀態判斷的地方。</p>
+
+  <h2 id="tools">6. 工具對照速查</h2>
+  <table>
+    <tr><th>做法</th><th>Claude Code</th><th>Cursor</th><th>GitHub Copilot</th><th>Codex／通用</th></tr>
+    <tr><td>常駐約束檔</td><td><code>CLAUDE.md</code></td><td><code>.cursorrules</code>／Rules</td><td><code>.github/copilot-instructions.md</code></td><td><code>AGENTS.md</code></td></tr>
+    <tr><td>展開工作單</td><td colspan="4">通用：口訣＋護法句（本附錄 §0、§2）—— 任何工具都成立</td></tr>
+    <tr><td>背景委派</td><td>背景 agent／autopilot /l4</td><td>background agent</td><td>coding agent（雲端）</td><td>cloud task</td></tr>
+    <tr><td>驗收隔離</td><td colspan="4">通用：開新 session（或換一家模型）貼「任務＋diff」重審</td></tr>
+  </table>
+  <p>⚠️ 檔名與功能名以各工具<strong>官方文件</strong>為準（最後驗證 2026-07-03）。過期時用保鮮法：「這是我舊的做法清單 —— 幫我對照現在的工具，更新每一條的等價操作，並證明你的對照是對的。」</p>
+
+  <h2 id="debug">7. 自助排錯（第 3 堂常見卡點）</h2>
+  <table>
+    <tr><th>症狀</th><th>先試這個</th></tr>
+    <tr><td>斜線指令看不到 plugin</td><td>重啟 CLI 再試；確認 plugin 安裝輸出無錯誤；版本過舊先升級</td></tr>
+    <tr><td>掃描／onboard 跑不完</td><td>大 repo 先限縮：「先只掃 src/ 的主要流程」；或換 demo repo，自己的回家跑</td></tr>
+    <tr><td>AI 沒有反問就直接動手</td><td>口訣要說在最前面；或明講「先不要動手，先反問我三個問題」</td></tr>
+    <tr><td>回報沒有證據</td><td>補一句「拿出證據，我要能重跑」—— 沒有就是紅燈，不放行</td></tr>
+    <tr><td>權限／登入問題</td><td>公司網段先確認服務可達；個人帳號與公司帳號別混用</td></tr>
+    <tr><td>卡超過 3 分鐘</td><td>三層備援：換 demo repo → 看回放＋紙本裁決。卡住是預期內的，見第 3 堂第 5 張</td></tr>
+  </table>
+
+  <p class="foot">附錄版本 2026-07-03 · 原則內容不隨工具過期；工具細節以官方文件為準 · 配套：第 1–4 堂投影片</p>
+</div>
+</body>
+</html>
